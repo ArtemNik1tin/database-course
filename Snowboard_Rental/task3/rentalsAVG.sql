@@ -4,4 +4,4 @@ FROM (
     SELECT client_id, COUNT(1) AS rental_count
     FROM rentals
     GROUP BY client_id
-) AS client_stats;
+);
