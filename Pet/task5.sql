@@ -2,7 +2,7 @@
 SELECT 
     registry.vaccination_date,
     registry.vaccination_id,
-    ROW_NUMBER() OVER(ORDER BY registry.vaccination_date ASC, registry.registry_id ASC) AS num
+    ROW_NUMBER() OVER(ORDER BY registry.vaccination_date DESC, registry.registry_id DESC) AS num
 FROM registry
 WHERE registry.chip = 643097282666151;
 
@@ -10,14 +10,18 @@ WHERE registry.chip = 643097282666151;
 -- выведите накопительным итогом количество сделанных прививок за весь период
 -- (когда они в принципе делали прививки)
 SELECT 
-    registry.vaccination_date,
-	registry.vaccination_id,
-	COUNT(1) 
-	OVER(
-		ORDER BY registry.vaccination_date ASC, registry.registry_id ASC
-	) AS number_of_vaccinations 
-FROM registry
-WHERE registry.clinic_pet_id LIKE '1024/%'
+    daily.vaccination_date,
+    daily.daily_count,
+    SUM(daily.daily_count) OVER (ORDER BY daily.vaccination_date ASC) AS cumulative_vaccinations
+FROM (
+    SELECT 
+        registry.vaccination_date::date AS vaccination_date,
+        COUNT(*) AS daily_count
+    FROM registry
+    WHERE registry.clinic_pet_id LIKE '1024/%'
+    GROUP BY registry.vaccination_date::date
+) daily
+ORDER BY daily.vaccination_date;
 
 -- Коды владельцев животных и суммы штрафов для каждого из них
 -- (штраф 1 рубль за каждый день,
@@ -50,3 +54,9 @@ JOIN vaccination_list ON registry.vaccination_id = vaccination_list.vaccination_
 WHERE vaccination_list.vaccination_code LIKE '%R%'
 ) AS penalties
 GROUP BY owner_id
+
+-- owner_id: 127345115494
+SELECT registry.vaccination_date FROM registry
+WHERE chip = 643090021236211
+
+SELECT chip, owner_id FROM chip_list WHERE chip = 643090021236211

@@ -104,7 +104,8 @@ INSERT INTO Rentals (client_id, rental_date, return_date) VALUES
 (13, '2026-04-09 09:00', '2026-04-15 09:00'), (14, '2026-04-10 11:30', '2026-04-11 20:00'),
 (15, '2026-04-11 12:00', '2026-04-18 12:00'), (16, '2026-04-12 10:00', '2026-04-13 18:00'),
 (17, '2026-04-12 14:00', '2026-04-15 14:00'), (18, '2026-04-13 09:00', '2026-04-20 19:00'),
-(19, '2026-04-14 11:00', '2026-04-15 20:00'), (20, '2026-04-15 15:00', '2026-04-17 10:00');
+(19, '2026-04-14 11:00', '2026-04-15 20:00'), (20, '2026-04-15 15:00', '2026-04-17 10:00'),
+(1, NOW() - INTERVAL '2 hours', NOW() + INTERVAL '4 hours');
 
 INSERT INTO Rentals_Item (rental_id, snowboard_id, boots_id, binding_id) VALUES 
 (1, 1, 1, 1), (2, 2, 2, 2), (3, 3, 3, 3), (4, 4, 4, 4), (5, 5, 5, 1),
@@ -128,4 +129,57 @@ INSERT INTO Rentals_Item (rental_id, snowboard_id, boots_id, binding_id) VALUES
 (91, 11, 1, 3), (92, 12, 2, 4), (93, 13, 3, 1), (94, 14, 4, 2), (95, 15, 5, 3),
 (96, 16, 6, 4), (97, 17, 7, 1), (98, 18, 8, 2), (99, 19, 9, 3), (100, 20, 10, 4),
 (101, 1, 11, 1), (102, 2, 12, 2), (103, 3, 13, 3), (104, 4, 14, 4), (105, 5, 15, 1),
-(106, 6, 1, 2), (107, 7, 2, 3), (108, 8, 3, 4), (109, 9, 4, 1), (110, 10, 5, 2);
+(106, 6, 1, 2), (107, 7, 2, 3), (108, 8, 3, 4), (109, 9, 4, 1), (110, 10, 5, 2),
+((SELECT MAX(rental_id) FROM Rentals), 1, 1, 1);
+
+INSERT INTO Rentals (client_id, rental_date, return_date) VALUES 
+(26, '2026-05-24 10:00', '2026-05-26 18:00'),
+(27, '2026-05-25 08:00', '2026-05-25 20:00');
+
+INSERT INTO Rentals_Item (rental_id, snowboard_id, boots_id, binding_id) VALUES 
+((SELECT MAX(rental_id)-1 FROM Rentals), 1, NULL, NULL),
+((SELECT MAX(rental_id) FROM Rentals), NULL, 2, 2);
+
+INSERT INTO Rentals (client_id, rental_date, return_date) VALUES 
+(28, '2026-01-01 09:00', '2026-06-01 18:00');
+
+INSERT INTO Rentals_Item (rental_id, snowboard_id, boots_id, binding_id) VALUES 
+((SELECT MAX(rental_id) FROM Rentals), 3, 3, 3);
+
+INSERT INTO Rentals (client_id, rental_date, return_date) VALUES 
+(29, NOW() - INTERVAL '1 hour', NOW() + INTERVAL '5 hours');
+
+INSERT INTO Rentals_Item (rental_id, snowboard_id, boots_id, binding_id) VALUES 
+((SELECT MAX(rental_id) FROM Rentals), 5, 5, 1);
+
+INSERT INTO Clients (phone_number, full_name) VALUES 
+('+79991112233', 'Иванов Иван Иванович'),
+('+79992223344', 'Петров Петр Петрович'),
+('+79993334455', 'Сидоров Сидор Сидорович'),
+('+79994445566', 'Алексеев Алексей Алексеевич');
+
+INSERT INTO Rentals (client_id, rental_date, return_date) 
+VALUES ((SELECT client_id FROM Clients WHERE phone_number='+79991112233'), NOW() - INTERVAL '2 days', NOW() + INTERVAL '1 day');
+
+INSERT INTO Rentals_Item (rental_id, snowboard_id, boots_id, binding_id) 
+VALUES ((SELECT MAX(rental_id) FROM Rentals), 1, NULL, NULL);
+
+INSERT INTO Rentals (client_id, rental_date, return_date) 
+VALUES ((SELECT client_id FROM Clients WHERE phone_number='+79992223344'), NOW() - INTERVAL '1 day', NOW() + INTERVAL '2 days');
+
+INSERT INTO Rentals_Item (rental_id, snowboard_id, boots_id, binding_id) 
+VALUES ((SELECT MAX(rental_id) FROM Rentals), NULL, 2, 2);
+
+
+INSERT INTO Rentals (client_id, rental_date, return_date) 
+VALUES ((SELECT client_id FROM Clients WHERE phone_number='+79993334455'), '2026-01-01 10:00:00', '2026-06-15 18:00:00');
+
+INSERT INTO Rentals_Item (rental_id, snowboard_id, boots_id, binding_id) 
+VALUES ((SELECT MAX(rental_id) FROM Rentals), 3, 3, 3);
+
+
+INSERT INTO Rentals (client_id, rental_date, return_date) 
+VALUES ((SELECT client_id FROM Clients WHERE phone_number='+79994445566'), NOW() - INTERVAL '2 hours', NOW() + INTERVAL '4 hours');
+
+INSERT INTO Rentals_Item (rental_id, snowboard_id, boots_id, binding_id) 
+VALUES ((SELECT MAX(rental_id) FROM Rentals), 4, 4, 4);

@@ -1,0 +1,82 @@
+Никитин Артём 24Б44
+
+-- Задание 1
+SELECT
+	id_stop, id_direction
+FROM route_by_stops rbs
+WHERE rbs.route_number = 11
+  AND rbs.id_stop IN (15463, 16777);
+-- Ответ: Степан - 2; Мария - 1.
+
+-- Задание 2
+SELECT latitude, longitude
+FROM stops
+WHERE id_stop = 15463;
+-- Ответ: latitude = 59.9408024000; longitude = 59.9408024000.
+
+-- Задание 3
+SELECT s.id_stop
+FROM route_by_stops rbs
+JOIN stops s ON rbs.id_stop = s.id_stop
+WHERE rbs.route_number = 11
+  AND rbs.id_direction = 1
+ORDER BY CoordinateDistance(59.9408024000, 59.9408024000, s.latitude, s.longitude) ASC
+LIMIT 1;
+-- Ответ: 15543
+
+-- Задание 4
+SELECT CoordinateDistance(59.9408024000, 59.9408024000, s.latitude, s.longitude) AS min_distance_meters
+FROM route_by_stops rbs
+JOIN stops s ON rbs.id_stop = s.id_stop
+WHERE rbs.route_number = 11
+  AND rbs.id_direction = 1
+ORDER BY min_distance_meters ASC
+LIMIT 1;
+-- Ответ: 1632074
+
+-- Задание 5
+SELECT stop_number
+FROM route_by_stops rbs
+WHERE rbs.route_number = 11
+  AND rbs.id_direction = 1
+  AND rbs.id_stop = 15543;
+-- Ответ: 36
+
+-- Задание 6
+SELECT stop_number
+FROM route_by_stops rbs
+WHERE rbs.route_number = 11
+  AND rbs.id_direction = 1
+  AND rbs.id_stop = 16777;
+-- Ответ: 1
+
+--Задание 7
+SELECT SUM(distance_back) as total_route_distance
+FROM route_by_stops rbs
+WHERE rbs.route_number = 11
+  AND rbs.id_direction = 1
+  AND rbs.stop_number > 1
+  AND rbs.stop_number <= 36;
+-- Ответ: 17920
+
+-- Задание 8
+WITH route_segment AS (
+    SELECT id_stop, stop_number, distance_back
+    FROM route_by_stops rbs
+    WHERE rbs.route_number = 11
+      AND rbs.id_direction = 1
+),
+running_distances AS (
+    SELECT r1.id_stop,
+           SUM(r2.distance_back) as current_distance
+    FROM route_segment r1
+    JOIN route_segment r2 ON r2.stop_number > 1 AND r2.stop_number <= r1.stop_number
+    WHERE r1.stop_number > 1
+      AND r1.stop_number <= 36
+    GROUP BY r1.id_stop
+)
+SELECT id_stop
+FROM running_distances
+ORDER BY ABS(current_distance - (17920 / 2.0)) ASC
+LIMIT 1;
+-- Ответ: 14981
