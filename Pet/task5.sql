@@ -9,54 +9,62 @@ WHERE registry.chip = 643097282666151;
 -- Для ветеринарной клиники с кодом Y 
 -- выведите накопительным итогом количество сделанных прививок за весь период
 -- (когда они в принципе делали прививки)
-SELECT 
-    daily.vaccination_date,
-    daily.daily_count,
-    SUM(daily.daily_count) OVER (ORDER BY daily.vaccination_date ASC) AS cumulative_vaccinations
-FROM (
+WITH daily_stats AS (
     SELECT 
-        registry.vaccination_date::date AS vaccination_date,
+        vaccination_date::date AS vaccination_date,
         COUNT(*) AS daily_count
     FROM registry
-    WHERE registry.clinic_pet_id LIKE '1024/%'
-    GROUP BY registry.vaccination_date::date
-) daily
-ORDER BY daily.vaccination_date;
+    WHERE clinic_pet_id LIKE '1024/%'
+    GROUP BY vaccination_date::date
+)
+SELECT
+    vaccination_date,
+    daily_count,
+    SUM(daily_count) OVER (ORDER BY vaccination_date ASC) AS cumulative_vaccinations
+FROM daily_stats
+ORDER BY vaccination_date;
 
 -- Коды владельцев животных и суммы штрафов для каждого из них
 -- (штраф 1 рубль за каждый день,
 -- когда животному требовалась прививка от бешенства, а предыдущая уже закончилась) на дату 1/1/2022
+WITH base_vaccinations AS (
+    SELECT
+        cl.owner_id,
+        r.chip,
+        (r.vaccination_date + make_interval(months => vl.validity_period_months))::date AS end_date,
+        LEAD(r.vaccination_date) OVER (PARTITION BY r.chip ORDER BY r.vaccination_date) AS next_vac_date
+    FROM chip_list cl
+    JOIN registry r ON r.chip = cl.chip
+    JOIN vaccination_list vl ON r.vaccination_id = vl.vaccination_id
+    WHERE vl.vaccination_code LIKE '%R%'
+	-- AND owner_id = 256249660464
+),
+
+calculated_days AS (
+    SELECT 
+        owner_id,
+        CASE 
+            WHEN end_date >= DATE '2022-01-01' THEN 0
+
+			WHEN next_vac_date IS NULL OR next_vac_date >= DATE '2022-01-01' 
+                THEN DATE '2022-01-01' - end_date
+            
+            ELSE next_vac_date - end_date
+        END AS penalty_days
+    FROM base_vaccinations
+)
+
 SELECT 
-	owner_id,
-	SUM(
-		CASE WHEN next_vac_date - end_date_of_vaccination <= 0
-		THEN 0
-		ELSE next_vac_date - end_date_of_vaccination
-		END
-	) AS penalties
-FROM (
-SELECT
-	chip_list.owner_id,
-	vaccination_list.vaccination_code,
-	(registry.vaccination_date + make_interval(months => vaccination_list.validity_period_months))::date
-	AS end_date_of_vaccination,
-	CASE WHEN LEAD(registry.vaccination_date)
-	OVER(PARTITION BY registry.chip ORDER BY registry.vaccination_date) >= '1-1-2022'
-	OR LEAD(registry.vaccination_date)
-	OVER(PARTITION BY registry.chip ORDER BY registry.vaccination_date) IS NULL
-		THEN '1-1-2022'
-	ELSE
-		LEAD(registry.vaccination_date) OVER(PARTITION BY registry.chip ORDER BY registry.vaccination_date)
-	END AS next_vac_date
-FROM chip_list
-JOIN registry ON registry.chip = chip_list.chip
-JOIN vaccination_list ON registry.vaccination_id = vaccination_list.vaccination_id
-WHERE vaccination_list.vaccination_code LIKE '%R%'
-) AS penalties
-GROUP BY owner_id
+    owner_id,
+    SUM(CASE WHEN penalty_days < 0 THEN 0 ELSE penalty_days END) AS penalties
+FROM calculated_days
+-- WHERE owner_id = 256249660464
+GROUP BY owner_id;
 
--- owner_id: 127345115494
+-- owner_id: 256249660464
 SELECT registry.vaccination_date FROM registry
-WHERE chip = 643090021236211
+WHERE chip = 643090010195663
 
-SELECT chip, owner_id FROM chip_list WHERE chip = 643090021236211
+SELECT chip, owner_id FROM chip_list WHERE chip = 643090010195663
+
+SELECT chip, owner_id FROM chip_list WHERE owner_id = 256249660464

@@ -119,30 +119,20 @@ WITH package_gaps AS (
         (CASE WHEN ri.snowboard_id IS NOT NULL THEN 300 ELSE 0 END +
          CASE WHEN ri.boots_id IS NOT NULL THEN 150 ELSE 0 END +
          CASE WHEN ri.binding_id IS NOT NULL THEN 100 ELSE 0 END) AS actual_hourly_rate,
-         
+        
         (CASE WHEN ri.snowboard_id IS NULL THEN 300 ELSE 0 END +
          CASE WHEN ri.boots_id IS NULL THEN 150 ELSE 0 END +
          CASE WHEN ri.binding_id IS NULL THEN 100 ELSE 0 END) AS lost_hourly_rate
     FROM Rentals_Item ri
     JOIN Rentals r ON r.rental_id = ri.rental_id
     JOIN Clients c ON r.client_id = c.client_id
-),
-financial_totals AS (
-    SELECT 
-        rental_id,
-        client_name,
-        rental_hours,
-        (actual_hourly_rate * rental_hours) AS earned_revenue,
-        (lost_hourly_rate * rental_hours) AS lost_revenue,
-        ((actual_hourly_rate + lost_hourly_rate) * rental_hours) AS ideal_potential_revenue
-    FROM package_gaps
 )
 SELECT 
     rental_id,
     client_name,
     rental_hours,
-    earned_revenue,
-    lost_revenue
-FROM financial_totals
-WHERE lost_revenue > 0
-ORDER BY lost_revenue DESC;
+    (actual_hourly_rate * rental_hours) AS earned_revenue,
+    (lost_hourly_rate * rental_hours) AS lost_revenue,
+    ((actual_hourly_rate + lost_hourly_rate) * rental_hours) AS ideal_potential_revenue
+FROM package_gaps
+ORDER BY lost_revenue DESC

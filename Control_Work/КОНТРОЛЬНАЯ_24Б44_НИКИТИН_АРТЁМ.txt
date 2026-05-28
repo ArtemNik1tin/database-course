@@ -12,7 +12,7 @@ WHERE rbs.route_number = 11
 SELECT latitude, longitude
 FROM stops
 WHERE id_stop = 15463;
--- Ответ: latitude = 59.9408024000; longitude = 59.9408024000.
+-- Ответ: latitude = 59.9408024000; longitude = 30.2916985000.
 
 -- Задание 3
 SELECT s.id_stop
@@ -20,9 +20,9 @@ FROM route_by_stops rbs
 JOIN stops s ON rbs.id_stop = s.id_stop
 WHERE rbs.route_number = 11
   AND rbs.id_direction = 1
-ORDER BY CoordinateDistance(59.9408024000, 59.9408024000, s.latitude, s.longitude) ASC
+ORDER BY CoordinateDistance(59.9408024000, 30.2916985000, s.latitude, s.longitude) ASC
 LIMIT 1;
--- Ответ: 15543
+-- Ответ: 16784
 
 -- Задание 4
 SELECT CoordinateDistance(59.9408024000, 59.9408024000, s.latitude, s.longitude) AS min_distance_meters
@@ -32,7 +32,7 @@ WHERE rbs.route_number = 11
   AND rbs.id_direction = 1
 ORDER BY min_distance_meters ASC
 LIMIT 1;
--- Ответ: 1632074
+-- Ответ: 21
 
 -- Задание 5
 SELECT stop_number
@@ -40,7 +40,7 @@ FROM route_by_stops rbs
 WHERE rbs.route_number = 11
   AND rbs.id_direction = 1
   AND rbs.id_stop = 15543;
--- Ответ: 36
+-- Ответ: 21
 
 -- Задание 6
 SELECT stop_number
@@ -56,8 +56,8 @@ FROM route_by_stops rbs
 WHERE rbs.route_number = 11
   AND rbs.id_direction = 1
   AND rbs.stop_number > 1
-  AND rbs.stop_number <= 36;
--- Ответ: 17920
+  AND rbs.stop_number <= 21;
+-- Ответ: 10220
 
 -- Задание 8
 WITH route_segment AS (

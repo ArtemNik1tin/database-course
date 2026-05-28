@@ -1,0 +1,1 @@
+SELECT * FROM v_boots_abc_analysis;
